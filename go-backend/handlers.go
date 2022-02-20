@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/moaabb/go-backend/data"
@@ -159,7 +160,7 @@ func (app *application) GetGenreByID(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) EditMovie(rw http.ResponseWriter, r *http.Request) {
-	var response models.Movie
+	var response models.MoviePayload
 
 	err := data.FromJSON(&response, r.Body)
 	if err != nil {
@@ -170,9 +171,29 @@ func (app *application) EditMovie(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(response)
+	var movie models.Movie
 
-	data.ToJSON(rw, response, http.StatusOK, "response")
+	movie.ID, _ = strconv.Atoi(response.ID)
+	movie.Title = response.Title
+	movie.Description = response.Description
+	movie.ReleaseDate, _ = time.Parse("2006-01-02", response.ReleaseDate)
+	movie.Year = movie.ReleaseDate.Year()
+	movie.Runtime, _ = strconv.Atoi(response.Runtime)
+	movie.Rating, _ = strconv.Atoi(response.Rating)
+	movie.MPAARating = response.MPAARating
+	movie.CreatedAt = time.Now()
+	movie.UpdatedAt = time.Now()
+
+	err = app.DBModel.InsertMovie(movie)
+	if err != nil {
+		data.ToJSON(rw, &data.GenericError{
+			Message: err.Error(),
+		}, http.StatusBadRequest, "error")
+		app.l.Error(err.Error())
+		return
+	}
+
+	data.ToJSON(rw, movie, http.StatusOK, "response")
 }
 
 func (app *application) NotFound(rw http.ResponseWriter, r *http.Request) {
