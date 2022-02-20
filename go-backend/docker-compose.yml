@@ -1,0 +1,36 @@
+# Use postgres/example user/password credentials
+version: '3.9'
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: bookings
+      POSTGRES_USER: moab
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - 8000:5432
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 100M
+
+  admin:
+    image: dpage/pgadmin4
+    ports:
+      - 9090:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: lionmd76@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: example
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 150M
+
+
+volumes:
+  pgdata:
